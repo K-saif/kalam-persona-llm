@@ -8,6 +8,7 @@ __pycache__/
 
 /old/*
 
+/unsloth_compiled_cache/*
 # Distribution / packaging
 .Python
 build/
