@@ -14,7 +14,6 @@ __pycache__/
 /kalam_cpt_output_v2/*
 /unsloth_compiled_cache/*
 
-*.txt
 
 # Distribution / packaging
 .Python
