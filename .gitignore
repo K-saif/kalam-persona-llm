@@ -22,7 +22,8 @@ __pycache__/
 /kalam_cpt_output_v2/*
 /unsloth_compiled_cache/*
 
-
+/kalam_final_model/*
+/kalam_sft_output/*
 
 
 # Distribution / packaging

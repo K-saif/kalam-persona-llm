@@ -18,35 +18,55 @@ model, tokenizer = FastLanguageModel.from_pretrained(
     load_in_4bit=True,
 )
 
-model = FastLanguageModel.get_peft_model(
-    model,
-    r=32,                                      # Slightly higher for SFT
-    target_modules=["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"],
-    lora_alpha=32,
-    lora_dropout=0,
-    bias="none",
-    use_gradient_checkpointing="unsloth",
-    random_state=3407,
-)
+# Formatting function for chat data
+def formatting_func(example):
+    outputs = []
 
+    # Detect if batched or single
+    if isinstance(example["messages"], list) and len(example["messages"]) > 0 and isinstance(example["messages"][0], dict):
+        # 👉 SINGLE sample case
+        batch = [example["messages"]]
+    else:
+        # 👉 BATCHED case
+        batch = example["messages"]
+
+    for messages in batch:
+        text = ""
+        for msg in messages:
+            if not isinstance(msg, dict):
+                continue  # safety check
+
+            role = msg.get("role", "")
+            content = msg.get("content", "")
+
+            if role == "system":
+                text += f"<|system|>\n{content}\n"
+            elif role == "user":
+                text += f"<|user|>\n{content}\n"
+            elif role == "assistant":
+                text += f"<|assistant|>\n{content}\n"
+
+        outputs.append(text)
+
+    return outputs
 # Load SFT dataset
-dataset = load_dataset("json", data_files="kalam_sft_final.jsonl", split="train")
+dataset = load_dataset("json", data_files="C:/Users/khans/Documents/APJ-Abdul-Kalam/Datasets/kalam_sft_final_fixed.jsonl", split="train")
 
 trainer = SFTTrainer(
     model=model,
     tokenizer=tokenizer,
     train_dataset=dataset,
-    dataset_text_field=None,           # Important when using "messages"
+    formatting_func=formatting_func,
     max_seq_length=max_seq_length,
     dataset_num_proc=2,
     packing=False,                     # False for chat format
     args=TrainingArguments(
-        per_device_train_batch_size=1,
-        gradient_accumulation_steps=12,     # Adjust based on VRAM (try 8-16)
+        per_device_train_batch_size=4,
+        gradient_accumulation_steps=16,     # Adjust based on VRAM (try 8-16)
         num_train_epochs=2,                 # 2 epochs is good
         learning_rate=8e-5,                 # Lower than CPT
         warmup_steps=20,
-        logging_steps=10,
+        logging_steps=5,
         output_dir="kalam_sft_output",
         optim="adamw_8bit",
         weight_decay=0.01,
