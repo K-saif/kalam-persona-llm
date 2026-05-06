@@ -25,13 +25,14 @@ MAX_SEQ_LENGTH = 1024
 # =====================================================
 
 DATASET_FILE = "C:/Users/khans/Documents/APJ-Abdul-Kalam/Datasets/kalam_sft_final_fixed.jsonl"
-DATASET_REPO = "K-saif/kalam-instruct-dataset"
+DATASET_REPO = "K-saif/apj-kalam-instruct-dataset"
 
 # =====================================================
 # EXTRA FILES TO UPLOAD
 # =====================================================
 
 EXTRA_FILES = [
+    "C:/Users/khans/Documents/APJ-Abdul-Kalam/Datasets/kalam_qa_pairs.json",
     "C:/Users/khans/Documents/APJ-Abdul-Kalam/Datasets/kalam_cpt.jsonl",
 ]
 

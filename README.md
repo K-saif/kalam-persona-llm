@@ -116,7 +116,35 @@ See [QA_EXTRACTOR_SETUP.md](extractor_agent/QA_EXTRACTOR_SETUP.md) for detailed 
 python push_to_huggingface.py
 ```
 
-## 📊 Data Format
+## � Pre-trained Models & Datasets
+
+### Available on Hugging Face Hub
+
+**Fine-tuned Model:**
+- 🤗 **Model**: [K-saif/apj-kalam-instruct](https://huggingface.co/K-saif/apj-kalam-instruct)
+  - Instruction-tuned LLM specialized for APJ Abdul Kalam content
+  - Ready for inference and further fine-tuning
+
+**Dataset:**
+- 📊 **Dataset**: [K-saif/apj-kalam-instruct-dataset](https://huggingface.co/datasets/K-saif/apj-kalam-instruct-dataset)
+  - Complete training dataset with Q&A pairs and context
+  - Ready for model training or evaluation
+
+### Load from Hugging Face
+
+```python
+from transformers import AutoModelForCausalLM, AutoTokenizer
+
+# Load fine-tuned model
+model = AutoModelForCausalLM.from_pretrained("K-saif/apj-kalam-instruct")
+tokenizer = AutoTokenizer.from_pretrained("K-saif/apj-kalam-instruct")
+
+# Load dataset
+from datasets import load_dataset
+dataset = load_dataset("K-saif/apj-kalam-instruct-dataset")
+```
+
+## �📊 Data Format
 
 ### CPT Data Format (`.jsonl`)
 ```json
@@ -136,10 +164,9 @@ python push_to_huggingface.py
 ### Q&A Pairs Format (`.json`)
 ```json
 {
-  "context": "Background information",
-  "questions": [
+[
     {"question": "...", "answer": "..."}
-  ]
+]
 }
 ```
 
@@ -164,9 +191,18 @@ Key parameters in training scripts:
 
 ## 🔗 References
 
+**Project Resources:**
+- 🤗 [Model on Hugging Face](https://huggingface.co/K-saif/apj-kalam-instruct)
+- 📊 [Dataset on Hugging Face](https://huggingface.co/datasets/K-saif/apj-kalam-instruct-dataset)
+
+**Documentation & Tools:**
 - **Unsloth Documentation**: https://github.com/unslothai/unsloth
-- **APJ Abdul Kalam**: Former President of India (1931-2015)
-- **Famous Works**: "Wings of Fire", "Ignited Minds"
+- **Hugging Face**: https://huggingface.co
+
+**About APJ Abdul Kalam:**
+- Former President of India (1931-2015)
+- Renowned scientist and author
+- Known as the "Missile Man of India"
 
 ## 📄 License
 
