@@ -15,6 +15,7 @@ __pycache__/
 *.bat
 *.sh
 
+/utils/paste_script_advanced.py
 
 /kalam_cpt_lora/*
 /kalam_cpt_lora_v2/*

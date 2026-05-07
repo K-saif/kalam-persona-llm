@@ -105,12 +105,6 @@ Contains diverse training data organized into categories:
 - **`kalam_qa_pairs.json`** - Question-Answer pairs dataset
 - **`kalam_sft_final_fixed.jsonl`** - Finalized SFT data
 
-**Subcategories:**
-- **`GK_and_Personal_Info/`** - General knowledge and personal information about APJ Abdul Kalam
-- **`My_journey/`** - Content about his personal journey
-- **`Wings_of_fire/`** - Data from his autobiography "Wings of Fire"
-
-
 ### Utilities (`utils/`)
 
 Helper scripts for data processing:
@@ -118,11 +112,7 @@ Helper scripts for data processing:
 - **`generate_qa.py`** - Generate Q&A pairs from raw text
 - **`qa_to_chatML.py`** - Convert Q&A to ChatML format
 - **`txt_to_jsonl.py`** - Convert text files to JSONL format
-- **`paste_script_advanced.py`** - Advanced data processing script
 
-### Build Cache (`unsloth_compiled_cache/`)
-
-Pre-compiled trainer implementations for Unsloth (BCO, CPO, DPO, KTO, PPO, ORPO, etc.)
 
 ## 🛠️ Configuration
 
