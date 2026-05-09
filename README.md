@@ -139,11 +139,11 @@ Key parameters in training scripts:
 - **Multi-language Support**: Expand model to handle content in Hindi, Tamil, Telugu, and other Indian languages
 - **Enhanced Q&A Generation**: Implement advanced techniques for automatic Q&A pair generation from raw text
 - **Web API**: Deploy model as REST API for easy integration with web applications
-- **Evaluation Metrics**: Add comprehensive benchmarking against standard LLM evaluation datasets
+- **Evaluation Metrics & Pipeline**: Add comprehensive benchmarking against standard LLM evaluation datasets
 
 ### Model Improvements
 
-- **Larger Model Variants**: Train versions using Llama 3, Mistral, and other base models
+- **Larger Model Variants**: Train versions using Llama3, Gemma4, and other base models
 - **Context Window Expansion**: Extend max sequence length for longer conversations
 
 ### Dataset Enhancements
