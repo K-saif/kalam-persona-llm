@@ -1,151 +1,155 @@
 import os
-import torch
-from unsloth import FastLanguageModel
-
-# =========================================================
-# ENV SETTINGS
-# =========================================================
-
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
-os.environ["NCCL_P2P_DISABLE"] = "1"
-os.environ["NCCL_IB_DISABLE"] = "1"
-os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
 
-# Disable torch dynamo/compilation to avoid conflicts
-os.environ["TORCH_COMPILE_DISABLE"] = "1"
-torch._dynamo.disable()
+import torch
 
-# =========================================================
-# LOAD TRAINED MODEL
-# =========================================================
-
-print("Loading trained model...")
-
-model, tokenizer = FastLanguageModel.from_pretrained(
-    model_name="kalam_gemma3_4b_final_model",
-    max_seq_length=768,
-    dtype=None,
-    load_in_4bit=True,
+from transformers import (
+    AutoModelForCausalLM,
+    AutoTokenizer,
+    BitsAndBytesConfig,
+    StoppingCriteria,
+    StoppingCriteriaList,
 )
 
-# Set model to inference mode
-FastLanguageModel.for_inference(model)
+from peft import PeftModel
 
-print("Model loaded successfully!")
+# ========================= PATHS =========================
 
-# =========================================================
-# INFERENCE FUNCTION
-# =========================================================
+base_model = "kalam_cpt_merged"
+adapter = "kalam_final_lora"
 
-def generate_response(user_input, system_prompt="", max_new_tokens=256, temperature=0.7, top_p=0.9):
-    """
-    Generate a response from the model
-    
-    Args:
-        user_input: User's question/prompt
-        system_prompt: Optional system prompt to guide behavior
-        max_new_tokens: Maximum tokens to generate
-        temperature: Sampling temperature (higher = more creative)
-        top_p: Nucleus sampling parameter
-    
-    Returns:
-        Generated response text
-    """
-    
-    # Format the input using the same format as training
-    prompt = ""
-    
-    if system_prompt:
-        prompt += f"<|system|>\n{system_prompt}\n"
-    
-    prompt += f"<|user|>\n{user_input}\n<|assistant|>\n"
-    
-    # Tokenize
-    inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
-    
-    # Generate with inference mode
-    with torch.inference_mode():
-        outputs = model.generate(
-            input_ids=inputs["input_ids"],
-            attention_mask=inputs.get("attention_mask"),
-            max_new_tokens=max_new_tokens,
-            temperature=temperature,
-            top_p=top_p,
-            do_sample=True,
+# ========================= QUANTIZATION =========================
+
+quant_config = BitsAndBytesConfig(
+    load_in_4bit=True,
+    bnb_4bit_quant_type="nf4",
+    bnb_4bit_compute_dtype=torch.bfloat16,
+    bnb_4bit_use_double_quant=True,
+)
+
+# ========================= TOKENIZER =========================
+
+tokenizer = AutoTokenizer.from_pretrained(
+    adapter,
+    trust_remote_code=True
+)
+
+# ========================= MODEL =========================
+
+model = AutoModelForCausalLM.from_pretrained(
+    base_model,
+    quantization_config=quant_config,
+    device_map="auto",
+    trust_remote_code=True,
+)
+
+model = PeftModel.from_pretrained(model, adapter)
+
+model.eval()
+
+# ========================= STOPPING =========================
+
+class StopOnTokens(StoppingCriteria):
+    def __call__(self, input_ids, scores, **kwargs):
+
+        stop_ids = [
+            tokenizer.eos_token_id,
+        ]
+
+        last_token = input_ids[0][-1].item()
+
+        return last_token in stop_ids
+
+stopping_criteria = StoppingCriteriaList([
+    StopOnTokens()
+])
+
+# ========================= PROMPT =========================
+
+messages = [
+    {
+        "role": "system",
+        "content": (
+            "You are APJ Abdul Kalam, former President of India, "
+            "known as the Missile Man. Speak with humility, wisdom, "
+            "inspiration, and deep love for science, education, and "
+            "the youth of India. Use simple, heartfelt, and profound "
+            "language. Always answer in first person as if you are "
+            "Kalam himself."
         )
-    
-    # Decode
-    response = tokenizer.decode(outputs[0], skip_special_tokens=True)
-    
-    # Extract only the assistant's response
-    if "<|assistant|>" in response:
-        response = response.split("<|assistant|>")[-1].strip()
-    
-    return response
+    },
+    {
+        "role": "user",
+        "content": "What should be the purpose of life?"
+    }
+]
 
-# =========================================================
-# INTERACTIVE TESTING
-# =========================================================
+text = tokenizer.apply_chat_template(
+    messages,
+    tokenize=False,
+    add_generation_prompt=True
+)
 
-def interactive_test():
-    """Interactive chat interface"""
-    print("\n" + "="*60)
-    print("MODEL TESTING - INTERACTIVE MODE")
-    print("="*60)
-    print("Type your questions below. Type 'quit' to exit.\n")
-    
-    while True:
-        user_input = input("You: ").strip()
-        
-        if user_input.lower() in ['quit', 'exit', 'q']:
-            print("Exiting...")
-            break
-        
-        if not user_input:
-            continue
-        
-        print("\nGenerating response...")
-        response = generate_response(user_input)
-        print(f"Model: {response}\n")
+inputs = tokenizer(
+    text,
+    return_tensors="pt"
+).to(model.device)
 
-# =========================================================
-# BATCH TESTING
-# =========================================================
+# ========================= GENERATION =========================
 
-def batch_test(test_prompts):
-    """Test model with a list of prompts"""
-    print("\n" + "="*60)
-    print("MODEL TESTING - BATCH MODE")
-    print("="*60 + "\n")
-    
-    for i, prompt in enumerate(test_prompts, 1):
-        print(f"[Test {i}]")
-        print(f"Prompt: {prompt}")
-        response = generate_response(prompt)
-        print(f"Response: {response}")
-        print("-" * 60)
+with torch.no_grad():
 
-# =========================================================
-# EXAMPLE TEST CASES
-# =========================================================
+    outputs = model.generate(
+        **inputs,
 
-if __name__ == "__main__":
-    # Example test prompts - modify these based on your model's training data
-    test_prompts = [
-        "Hello, how are you?",
-        "What is machine learning?",
-        "Explain artificial intelligence in simple terms",
-    ]
-    
-    print("\nChoose testing mode:")
-    print("1. Interactive (chat-like interface)")
-    print("2. Batch (predefined prompts)")
-    print("3. Both")
-    
-    choice = input("\nEnter choice (1/2/3): ").strip()
-    
-    if choice in ['1', '3']:
-        interactive_test()
-    
-    if choice in ['2', '3']:
-        batch_test(test_prompts)
+        max_new_tokens=100,
+
+        # Greedy decoding = cleaner output
+        do_sample=False,
+
+        repetition_penalty=1.15,
+
+        eos_token_id=tokenizer.eos_token_id,
+        pad_token_id=tokenizer.eos_token_id,
+
+        stopping_criteria=stopping_criteria,
+    )
+
+# ========================= DECODE =========================
+
+generated_tokens = outputs[0][inputs["input_ids"].shape[1]:]
+
+response = tokenizer.decode(
+    generated_tokens,
+    skip_special_tokens=True
+)
+
+# ========================= CLEANUP =========================
+
+stop_patterns = [
+    "\nuser",
+    "\nassistant",
+    "user",
+    "assistant",
+    "UrlParser",
+    "useRal",
+    "<|im_end|>",
+]
+
+for pattern in stop_patterns:
+    if pattern in response:
+        response = response.split(pattern)[0]
+
+# Keep only first paragraph
+response = response.split("\n")[0]
+
+# Remove weird unicode artifacts
+response = response.encode("ascii", "ignore").decode()
+
+# Clean spaces
+response = response.strip()
+
+# ========================= OUTPUT =========================
+
+print("\nAssistant:\n")
+print(response)

@@ -17,14 +17,8 @@ __pycache__/
 
 /utils/paste_script_advanced.py
 
-/kalam_cpt_lora/*
-/kalam_cpt_lora_v2/*
-/kalam_cpt_output/*
-/kalam_cpt_output_v2/*
-/unsloth_compiled_cache/*
+/kalam_cpt_merged/*
 
-/kalam_final_model/*
-/kalam_sft_output/*
 
 
 # Distribution / packaging
