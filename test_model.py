@@ -15,8 +15,8 @@ from peft import PeftModel
 
 # ========================= PATHS =========================
 
-base_model = "kalam_cpt_merged"
-adapter = "kalam_final_lora"
+base_model = "Qwen/Qwen2.5-7B"
+adapter = "K-saif/apj-kalam-instruct"
 
 # ========================= QUANTIZATION =========================
 
