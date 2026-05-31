@@ -1,24 +1,15 @@
-import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"
-
 import torch
 
 from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer,
     BitsAndBytesConfig,
-    StoppingCriteria,
-    StoppingCriteriaList,
 )
 
 from peft import PeftModel
 
-# ========================= PATHS =========================
-
 base_model = "Qwen/Qwen2.5-7B"
-adapter = "K-saif/apj-kalam-instruct"
-
-# ========================= QUANTIZATION =========================
+adapter = "K-saif/apj-kalam-instruct-v2"
 
 quant_config = BitsAndBytesConfig(
     load_in_4bit=True,
@@ -27,44 +18,17 @@ quant_config = BitsAndBytesConfig(
     bnb_4bit_use_double_quant=True,
 )
 
-# ========================= TOKENIZER =========================
-
-tokenizer = AutoTokenizer.from_pretrained(
-    adapter,
-    trust_remote_code=True
-)
-
-# ========================= MODEL =========================
+tokenizer = AutoTokenizer.from_pretrained(adapter)
 
 model = AutoModelForCausalLM.from_pretrained(
     base_model,
     quantization_config=quant_config,
     device_map="auto",
-    trust_remote_code=True,
 )
 
 model = PeftModel.from_pretrained(model, adapter)
 
 model.eval()
-
-# ========================= STOPPING =========================
-
-class StopOnTokens(StoppingCriteria):
-    def __call__(self, input_ids, scores, **kwargs):
-
-        stop_ids = [
-            tokenizer.eos_token_id,
-        ]
-
-        last_token = input_ids[0][-1].item()
-
-        return last_token in stop_ids
-
-stopping_criteria = StoppingCriteriaList([
-    StopOnTokens()
-])
-
-# ========================= PROMPT =========================
 
 messages = [
     {
@@ -80,7 +44,7 @@ messages = [
     },
     {
         "role": "user",
-        "content": "What should be the purpose of life?"
+        "content": "What is the purpose of life?"
     }
 ]
 
@@ -95,61 +59,21 @@ inputs = tokenizer(
     return_tensors="pt"
 ).to(model.device)
 
-# ========================= GENERATION =========================
-
 with torch.no_grad():
 
     outputs = model.generate(
         **inputs,
-
-        max_new_tokens=100,
-
-        # Greedy decoding = cleaner output
+        max_new_tokens=60,
         do_sample=False,
-
-        repetition_penalty=1.15,
-
-        eos_token_id=tokenizer.eos_token_id,
-        pad_token_id=tokenizer.eos_token_id,
-
-        stopping_criteria=stopping_criteria,
+        repetition_penalty=1.1,
     )
 
-# ========================= DECODE =========================
-
-generated_tokens = outputs[0][inputs["input_ids"].shape[1]:]
-
 response = tokenizer.decode(
-    generated_tokens,
+    outputs[0][inputs["input_ids"].shape[1]:],
     skip_special_tokens=True
 )
 
-# ========================= CLEANUP =========================
+if "<END>" in response:
+    response = response.split("<END>")[0]
 
-stop_patterns = [
-    "\nuser",
-    "\nassistant",
-    "user",
-    "assistant",
-    "UrlParser",
-    "useRal",
-    "<|im_end|>",
-]
-
-for pattern in stop_patterns:
-    if pattern in response:
-        response = response.split(pattern)[0]
-
-# Keep only first paragraph
-response = response.split("\n")[0]
-
-# Remove weird unicode artifacts
-response = response.encode("ascii", "ignore").decode()
-
-# Clean spaces
-response = response.strip()
-
-# ========================= OUTPUT =========================
-
-print("\nAssistant:\n")
 print(response)
