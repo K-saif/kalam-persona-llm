@@ -154,7 +154,8 @@ The project uses:
 - Gradient checkpointing
 - Consumer GPU-friendly training setup
 
-
+## Coming soon 
+- Qwen2.5-7B (without unsloth)
 ## 🤝 Contributing
 
 Contributions are welcome! Please open an issue or submit a pull request for improvements, bug fixes, or new features.
