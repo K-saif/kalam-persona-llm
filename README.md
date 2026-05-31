@@ -39,7 +39,7 @@ from transformers import (
 from peft import PeftModel
 
 base_model = "Qwen/Qwen2.5-7B"
-adapter = "K-saif/apj-kalam-instruct"
+adapter = "K-saif/apj-kalam-instruct-v2"
 
 quant_config = BitsAndBytesConfig(
     load_in_4bit=True,
@@ -91,24 +91,11 @@ response = tokenizer.decode(
 print(response)
 ```
 
-### ⚙️ Recommended Inference Settings
-
-For best response quality:
-
-```python
-max_new_tokens=60
-do_sample=False
-repetition_penalty=1.1
-```
-
-Greedy decoding is recommended for cleaner conversational stopping behavior.
-
-
 ### Train Your Own Model
 
 **Resources:**
-- 🤗 **Model**: [K-saif/apj-kalam-instruct](https://huggingface.co/K-saif/apj-kalam-instruct)
-- 📊 **Dataset**: [K-saif/apj-kalam-instruct-dataset](https://huggingface.co/datasets/K-saif/apj-kalam-instruct-dataset)
+- 🤗 **Model**: [K-saif/apj-kalam-instruct-v2](https://huggingface.co/K-saif/apj-kalam-instruct-v2)
+- 📊 **Dataset**: [K-saif/apj-kalam-instruct-dataset-v2](https://huggingface.co/datasets/K-saif/apj-kalam-instruct-dataset-v2)
 
 #### Prerequisites
 
@@ -154,8 +141,7 @@ The project uses:
 - Gradient checkpointing
 - Consumer GPU-friendly training setup
 
-## Coming soon 
-- Qwen2.5-7B (without unsloth)
+
 ## 🤝 Contributing
 
 Contributions are welcome! Please open an issue or submit a pull request for improvements, bug fixes, or new features.
